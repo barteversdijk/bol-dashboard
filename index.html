@@ -391,83 +391,80 @@ let STATE = {
 };
 
 // ═══════════════════════════════════════════════
-//  GOOGLE SHEETS — Read/Write via public CSV export
-//  + Apps Script for writes
+//  GOOGLE SHEETS — via Apps Script
 // ═══════════════════════════════════════════════
+
+async function apiGet(params) {
+  const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  const res = await fetch(url, { redirect: 'follow' });
+  return res.json();
+}
+
+async function apiPost(payload) {
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    redirect: 'follow'
+  });
+  return res.json();
+}
+
 async function testSheetConnection() {
   const badge = document.getElementById('sheetBadge');
   const log = document.getElementById('sheetLog');
   badge.className = 'sync-badge syncing'; badge.textContent = 'Verbinden...';
   log.textContent = '';
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=_meta`;
-    const res = await fetch(url);
-    if (res.ok) {
+    if (!APPS_SCRIPT_URL) throw new Error('Geen Apps Script URL ingesteld.');
+    const json = await apiGet({ action: 'ping' });
+    if (json.ok) {
       badge.className = 'sync-badge'; badge.textContent = 'Verbonden';
       log.className = 'upload-log ok';
-      log.textContent = '✓ Google Sheet bereikbaar. Je kunt data uploaden.';
-    } else {
-      throw new Error('Sheet niet bereikbaar (status ' + res.status + ')');
-    }
+      log.textContent = 'Verbonden met Google Sheets. Je kunt data uploaden.';
+    } else throw new Error(json.error || 'Onbekende fout');
   } catch(e) {
     badge.className = 'sync-badge err'; badge.textContent = 'Fout';
     log.className = 'upload-log err';
-    log.textContent = '⚠ ' + e.message + '\n\nZorg dat de Sheet gedeeld is: Delen → "Iedereen met de link" → Bewerker.';
+    log.textContent = 'Fout: ' + e.message;
   }
 }
 
-// Read a sheet tab as CSV rows
 async function readSheetTab(tabName) {
-  // Try Apps Script first (most reliable)
-  const scriptRows = await readFromSheetViaScript(tabName);
-  if (scriptRows && scriptRows.length > 0) return scriptRows;
-  // Fallback: public CSV export
-  try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
-    const res = await fetch(url);
-    if (res.ok) { const text = await res.text(); return parseCsvText(text); }
-  } catch(e) {}
-  // Last resort: localStorage
+  if (APPS_SCRIPT_URL) {
+    try {
+      const json = await apiGet({ action: 'read', sheet: tabName });
+      if (json.ok && json.rows && json.rows.length > 0) return json.rows;
+    } catch(e) { console.warn('Sheet read failed:', e); }
+  }
   try {
     const local = localStorage.getItem('bol_' + tabName);
-    if (local) {
-      const rows = JSON.parse(local);
-      return rows;
-    }
+    if (local) return JSON.parse(local);
   } catch(e) {}
   return [];
 }
 
-// Write to sheet via Apps Script (deployed as web app)
 async function writeToSheet(tabName, rows) {
-  // Always save to localStorage as backup
   try { localStorage.setItem('bol_' + tabName, JSON.stringify(rows)); } catch(e) {}
   if (!APPS_SCRIPT_URL) return true;
+  const CHUNK = 150;
   try {
-    // Use GET with params - works cross-origin without CORS preflight
-    const params = new URLSearchParams({
-      action: 'write',
-      sheet: tabName,
-      rows: JSON.stringify(rows)
-    });
-    const res = await fetch(APPS_SCRIPT_URL + '?' + params.toString(), { method: 'GET' });
-    const json = await res.json();
-    return json.ok;
+    if (rows.length <= CHUNK) {
+      const json = await apiPost({ action: 'write', sheet: tabName, rows });
+      return json.ok;
+    }
+    // Large data: chunked upload
+    for (let i = 0; i < rows.length; i += CHUNK) {
+      const json = await apiPost({
+        action: 'write_chunk', sheet: tabName,
+        rows: rows.slice(i, i + CHUNK), chunkIndex: i
+      });
+      if (!json.ok) throw new Error('Chunk mislukt bij rij ' + i);
+    }
+    const fin = await apiGet({ action: 'finalize', sheet: tabName });
+    return fin.ok;
   } catch(e) {
-    console.warn('Sheet write failed, using localStorage only:', e);
+    console.warn('writeToSheet error:', e);
     return false;
-  }
-}
-
-async function readFromSheetViaScript(tabName) {
-  if (!APPS_SCRIPT_URL) return null;
-  try {
-    const params = new URLSearchParams({ action: 'read', sheet: tabName });
-    const res = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
-    const json = await res.json();
-    return json.ok ? json.rows : null;
-  } catch(e) {
-    return null;
   }
 }
 
