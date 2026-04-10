@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bol Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+:root {
+  --bg:#080b12;--surface:#0f1520;--card:#141b28;--border:#1e2a3d;--border2:#253347;
+  --text:#e8edf5;--muted:#8494a8;--dim:#4a5568;
+  --blue:#3b82f6;--blue-d:#1d4ed8;--blue-l:#93c5fd;
+  --purple:#a855f7;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --sanova:#3b82f6;--mancraft:#a855f7;
+  --r:10px;--rs:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh;display:flex;}
+#sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;overflow-y:auto;}
+.logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
+.logo-title{font-size:14px;font-weight:600;letter-spacing:-.2px;}
+.logo-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.nav-section{padding:12px 8px 4px;}
+.nav-label{font-size:10px;color:var(--dim);padding:0 8px 6px;text-transform:uppercase;letter-spacing:.8px;font-weight:500;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--rs);cursor:pointer;color:var(--muted);font-size:12px;transition:all .15s;margin-bottom:1px;user-select:none;}
+.nav-item:hover{background:var(--card);color:var(--text);}
+.nav-item.active{background:rgba(59,130,246,.15);color:var(--blue-l);}
+.nav-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.nav-item.sub{padding-left:18px;font-size:11px;}
+#main{flex:1;padding:24px 28px;overflow-y:auto;min-width:0;}
+.page{display:none;}.page.active{display:block;}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.topbar h2{font-size:20px;font-weight:600;letter-spacing:-.3px;}
+.topbar p{font-size:12px;color:var(--muted);margin-top:3px;}
+.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
+.fb-group{display:flex;align-items:center;gap:7px;}
+.fb-label{font-size:11px;color:var(--muted);white-space:nowrap;}
+.seg{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:2px;gap:2px;}
+.seg button{padding:4px 11px;border-radius:4px;border:none;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.seg button.on{background:var(--blue);color:#fff;}
+.seg button.off{background:transparent;color:var(--muted);}
+select{background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:5px 10px;font-size:11px;color:var(--text);font-family:inherit;cursor:pointer;}
+select:focus{outline:none;border-color:var(--blue);}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px;}
+.kc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;}
+.kc-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+.kc-v{font-size:22px;font-weight:600;letter-spacing:-.5px;}
+.kc-d{font-size:11px;margin-top:3px;}
+.g{color:var(--green);}.r{color:var(--red);}.n{color:var(--muted);}.a{color:var(--amber);}
+.chart-row{display:grid;grid-template-columns:1fr 220px;gap:12px;margin-bottom:16px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;}
+.card-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;font-weight:500;}
+.chart-area{position:relative;height:220px;}
+.chart-leg{display:flex;gap:12px;margin-bottom:10px;}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
+.leg-line{width:14px;height:2px;border-radius:2px;}
+.leg-bar{width:10px;height:10px;border-radius:2px;opacity:.7;}
+.donut-wrap{display:flex;justify-content:center;margin-bottom:14px;}
+.brand-list{display:flex;flex-direction:column;gap:10px;}
+.brand-row{display:flex;justify-content:space-between;align-items:center;}
+.brand-name{display:flex;align-items:center;gap:7px;font-size:12px;}
+.brand-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.brand-val{font-size:13px;font-weight:600;}
+.brand-pct{font-size:10px;color:var(--muted);}
+.bar-group{display:flex;flex-direction:column;gap:9px;}
+.bar-row{display:flex;align-items:center;gap:10px;}
+.bar-label{font-size:12px;color:var(--text);width:100px;flex-shrink:0;cursor:pointer;}
+.bar-label:hover{color:var(--blue-l);text-decoration:underline;}
+.bar-track{flex:1;background:var(--bg);border-radius:4px;height:8px;}
+.bar-fill{height:8px;border-radius:4px;}
+.bar-vals{display:flex;gap:8px;width:130px;justify-content:flex-end;align-items:center;}
+.bar-v{font-size:12px;font-weight:600;}
+.bar-acos{font-size:10px;color:var(--muted);}
+.tbl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.tbl-top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);}
+.tbl-top-title{font-size:12px;font-weight:500;}
+.tbl-top-sub{font-size:11px;color:var(--muted);}
+.tbl-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{padding:8px 12px;text-align:right;font-size:10px;color:var(--muted);font-weight:500;background:var(--surface);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
+th:first-child{text-align:left;}
+td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap;font-size:12px;}
+td:first-child{text-align:left;}
+tr:last-child td{border-bottom:none;}
+.data-row{cursor:pointer;transition:background .1s;}
+.data-row:hover td{background:rgba(255,255,255,.02);}
+.data-row.open td{background:rgba(59,130,246,.06);border-bottom:none;}
+.note-row{display:none;}
+.note-row.open{display:table-row;}
+.note-row td{padding:0;border-bottom:1px solid var(--border);}
+.note-inner{padding:12px 16px;display:flex;gap:12px;align-items:flex-start;background:rgba(59,130,246,.04);}
+.note-bubble{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;}
+.note-bubble p{font-size:12px;line-height:1.6;}
+.note-bubble.empty p{color:var(--dim);font-style:italic;}
+.note-actions{display:flex;flex-direction:column;gap:6px;}
+.note-inp{width:280px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:8px 10px;color:var(--text);font-size:12px;resize:none;height:56px;font-family:inherit;}
+.note-inp:focus{outline:none;border-color:var(--blue);}
+.save-btn{padding:6px 14px;background:var(--blue-d);border:none;border-radius:var(--rs);color:#fff;font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s;}
+.save-btn:hover{background:var(--blue);}
+.save-btn.saving{background:var(--green);}
+.note-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);display:inline-block;margin-right:4px;vertical-align:middle;}
+.expand-icon{font-size:9px;color:var(--dim);margin-right:5px;display:inline-block;transition:transform .15s;}
+.data-row.open .expand-icon{transform:rotate(90deg);}
+.pill{padding:2px 8px;border-radius:8px;font-size:10px;font-weight:500;}
+.pill.g{background:rgba(34,197,94,.12);color:#4ade80;}
+.pill.a{background:rgba(245,158,11,.12);color:#fbbf24;}
+.pill.r{background:rgba(239,68,68,.12);color:#f87171;}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;}
+.chip{padding:2px 9px;border-radius:10px;font-size:10px;background:var(--surface);color:var(--muted);border:1px solid var(--border);}
+.prod-header{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;align-items:center;gap:16px;margin-bottom:14px;}
+.prod-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;text-align:center;line-height:1.3;font-family:'DM Mono',monospace;}
+.prod-info h3{font-size:16px;font-weight:600;letter-spacing:-.3px;}
+.prod-info p{font-size:11px;color:var(--muted);margin-top:3px;}
+.stat-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:14px;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;}
+.stat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+.stat-v{font-size:18px;font-weight:600;letter-spacing:-.4px;}
+.stat-d{font-size:10px;margin-top:2px;}
+.winst-inp{width:72px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 6px;color:var(--text);font-size:11px;text-align:right;font-family:'DM Mono',monospace;}
+.winst-inp:focus{outline:none;border-color:var(--blue);}
+.winst-inp.has-value{color:var(--green);}
+.back-btn{margin-left:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:7px 14px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.back-btn:hover{color:var(--text);border-color:var(--border2);}
+.col-tog{display:flex;gap:4px;}
+.ctog{padding:3px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;font-size:10px;cursor:pointer;font-family:inherit;color:var(--muted);transition:all .15s;}
+.ctog.on{background:rgba(59,130,246,.15);color:var(--blue-l);border-color:rgba(59,130,246,.3);}
+.upload-page{max-width:640px;}
+.upload-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px;}
+.upload-card h3{font-size:14px;font-weight:600;margin-bottom:6px;}
+.upload-card p{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;}
+.upload-zone{border:1px dashed var(--border2);border-radius:var(--r);padding:20px;text-align:center;cursor:pointer;transition:all .2s;}
+.upload-zone:hover{border-color:var(--blue);background:rgba(59,130,246,.04);}
+.upload-zone input{display:none;}
+.upload-zone-label{font-size:12px;color:var(--muted);cursor:pointer;line-height:1.8;}
+.upload-zone-label span{color:var(--blue);}
+.upload-btn{display:block;width:100%;margin-top:12px;padding:9px;background:var(--blue-d);border:none;border-radius:var(--rs);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;}
+.upload-btn:hover{background:var(--blue);}
+.upload-btn:disabled{opacity:.5;cursor:not-allowed;}
+.progress-bar{height:4px;background:var(--border);border-radius:4px;margin-top:10px;overflow:hidden;}
+.progress-fill{height:4px;background:var(--blue);border-radius:4px;width:0%;transition:width .3s;}
+.upload-log{font-size:11px;color:var(--muted);margin-top:8px;min-height:16px;white-space:pre-line;}
+.upload-log.ok{color:var(--green);}
+.upload-log.err{color:var(--red);}
+.process-btn{display:block;width:100%;padding:11px;background:var(--green);border:none;border-radius:var(--rs);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;}
+.process-btn:disabled{opacity:.4;cursor:not-allowed;}
+.sync-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:10px;background:rgba(34,197,94,.12);color:#4ade80;margin-left:10px;}
+.sync-badge.syncing{background:rgba(245,158,11,.12);color:#fbbf24;}
+.sync-badge.err{background:rgba(239,68,68,.12);color:#f87171;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+</style>
+</head>
+<body>
+<nav id="sidebar">
+  <div class="logo">
+    <div class="logo-title">Bol Dashboard</div>
+    <div class="logo-sub">Sanova · Mancraft</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overzicht</div>
+    <div class="nav-item active" id="nav-general" onclick="showPage('general')">Algemene resultaten</div>
+    <div class="nav-item" id="nav-upload" onclick="showPage('upload')">Upload data</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Sanova</div>
+    <div class="nav-item sub" id="nav-SNV-006" onclick="showProduct('SNV-006')"><span class="nav-dot" style="background:var(--sanova)"></span>SNV-006</div>
+    <div class="nav-item sub" id="nav-SNV-007" onclick="showProduct('SNV-007')"><span class="nav-dot" style="background:var(--sanova)"></span>SNV-007</div>
+    <div class="nav-item sub" id="nav-SNV-005" onclick="showProduct('SNV-005')"><span class="nav-dot" style="background:var(--sanova)"></span>SNV-005</div>
+    <div class="nav-item sub" id="nav-SNV-002" onclick="showProduct('SNV-002')"><span class="nav-dot" style="background:var(--sanova)"></span>SNV-002</div>
+    <div class="nav-item sub" id="nav-SNV-008" onclick="showProduct('SNV-008')"><span class="nav-dot" style="background:var(--sanova)"></span>SNV-008</div>
+    <div class="nav-item sub" id="nav-Handdoekhaken" onclick="showProduct('Handdoekhaken')"><span class="nav-dot" style="background:var(--sanova)"></span>Handdoekhaken</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Mancraft</div>
+    <div class="nav-item sub" id="nav-MC-2000A" onclick="showProduct('MC-2000A')"><span class="nav-dot" style="background:var(--mancraft)"></span>MC-2000A</div>
+    <div class="nav-item sub" id="nav-MC-2000B" onclick="showProduct('MC-2000B')"><span class="nav-dot" style="background:var(--mancraft)"></span>MC-2000B</div>
+    <div class="nav-item sub" id="nav-MC-1000A" onclick="showProduct('MC-1000A')"><span class="nav-dot" style="background:var(--mancraft)"></span>MC-1000A</div>
+    <div class="nav-item sub" id="nav-MC-1000B" onclick="showProduct('MC-1000B')"><span class="nav-dot" style="background:var(--mancraft)"></span>MC-1000B</div>
+    <div class="nav-item sub" id="nav-RSM-2888" onclick="showProduct('RSM-2888')"><span class="nav-dot" style="background:var(--mancraft)"></span>RSM-2888</div>
+  </div>
+</nav>
+
+<main id="main">
+
+  <!-- UPLOAD PAGE -->
+  <div class="page" id="page-upload">
+    <div class="topbar"><div><h2>Upload data</h2><p>Importeer Bol.com exportbestanden — data wordt opgeslagen in Google Sheets</p></div></div>
+    <div class="upload-page">
+      <div class="upload-card" style="border-color:rgba(59,130,246,.3)">
+        <h3>Google Sheets verbinding <span class="sync-badge" id="sheetBadge">Controleren...</span></h3>
+        <p>Data wordt opgeslagen in jouw Google Sheet zodat iedereen met de link hetzelfde ziet. Sheet ID: <code style="font-family:DM Mono,monospace;font-size:10px;color:var(--blue-l)">168RWMt5-7ZsSHxQtJoJtJrrP4xeaXsvu670QpdX1SY8</code></p>
+        <button class="upload-btn" style="background:rgba(59,130,246,.15);color:var(--blue-l);border:1px solid rgba(59,130,246,.3)" onclick="testSheetConnection()">Test verbinding</button>
+        <div class="upload-log" id="sheetLog"></div>
+      </div>
+
+      <div class="upload-card">
+        <h3>Artikelen CSV</h3>
+        <p>Exporteer "Artikelen per dag" vanuit Bol.com. Meerdere bestanden of een heel-jaar export werken beide.</p>
+        <div class="upload-zone" onclick="document.getElementById('artFiles').click()">
+          <input type="file" id="artFiles" accept=".csv,.xlsx" multiple onchange="onFilesSelected('art')">
+          <div class="upload-zone-label" id="artZoneLabel">Klik om bestanden te kiezen<br><span>CSV of XLSX · meerdere bestanden tegelijk mogelijk</span></div>
+        </div>
+        <button class="upload-btn" id="artUploadBtn" onclick="uploadFiles('art')" disabled>Uploaden naar Google Sheets</button>
+        <div class="progress-bar"><div class="progress-fill" id="artProgress"></div></div>
+        <div class="upload-log" id="artLog"></div>
+      </div>
+
+      <div class="upload-card">
+        <h3>Sponsored Products CSV</h3>
+        <p>Exporteer het "Sponsored Products rapport" vanuit Bol.com.</p>
+        <div class="upload-zone" onclick="document.getElementById('spFiles').click()">
+          <input type="file" id="spFiles" accept=".csv" multiple onchange="onFilesSelected('sp')">
+          <div class="upload-zone-label" id="spZoneLabel">Klik om bestanden te kiezen<br><span>CSV · meerdere bestanden tegelijk mogelijk</span></div>
+        </div>
+        <button class="upload-btn" id="spUploadBtn" onclick="uploadFiles('sp')" disabled>Uploaden naar Google Sheets</button>
+        <div class="progress-bar"><div class="progress-fill" id="spProgress"></div></div>
+        <div class="upload-log" id="spLog"></div>
+      </div>
+
+      <div class="upload-card">
+        <h3>Verwerk data</h3>
+        <p>Na het uploaden van beide bestanden, klik hier om de data te verwerken naar alle productpagina's en de grafiek bij te werken.</p>
+        <button class="process-btn" id="processBtn" onclick="processAndSync()">Verwerk data naar dashboard</button>
+        <div class="upload-log" id="processLog" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="upload-card" style="border-color:rgba(239,68,68,.2)">
+        <h3 style="color:var(--red)">Wis uploads</h3>
+        <p>Wist alle geüploade ruwe data. Notities en winst blijven bewaard.</p>
+        <button class="upload-btn" style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="clearUploads()">Wis alle uploads</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERAL PAGE -->
+  <div class="page active" id="page-general">
+    <div class="topbar">
+      <div><h2>Algemene resultaten</h2><p>Filter op merk, categorie of product · data uit Google Sheets</p></div>
+    </div>
+    <div class="filter-bar">
+      <div class="fb-group">
+        <span class="fb-label">Weergave:</span>
+        <div class="seg" id="viewSeg">
+          <button class="off" onclick="setView('merk')">Per merk</button>
+          <button class="off" onclick="setView('vergelijk')">Vergelijk merken</button>
+          <button class="off" onclick="setView('cat')">Per categorie</button>
+          <button class="on" onclick="setView('product')">Per product</button>
+        </div>
+      </div>
+      <div class="fb-group" id="fb-merk" style="display:none">
+        <span class="fb-label">Merk:</span>
+        <select id="selMerk" onchange="renderGeneral()"><option>Sanova</option><option>Mancraft</option></select>
+      </div>
+      <div class="fb-group" id="fb-cat" style="display:none">
+        <span class="fb-label">Categorie:</span>
+        <select id="selCat" onchange="renderGeneral()">
+          <option>Douchewissers</option><option>Doucherek</option><option>Droogdoeken</option>
+          <option>Handdoekhaken</option><option>Neustrimmers</option><option>Scheerapparaten</option><option>Bodygroomers</option>
+        </select>
+      </div>
+      <div class="fb-group" id="fb-prod">
+        <span class="fb-label">Product:</span>
+        <select id="selProd" onchange="renderGeneral()">
+          <option>SNV-006</option><option>SNV-007</option><option>SNV-005</option><option>SNV-002</option>
+          <option>SNV-008</option><option>Handdoekhaken</option><option>MC-2000A</option><option>MC-2000B</option>
+          <option>MC-1000A</option><option>MC-1000B</option><option>RSM-2888</option>
+        </select>
+      </div>
+      <div class="fb-group">
+        <span class="fb-label">Periode:</span>
+        <div class="seg" id="periodSeg">
+          <button class="off" onclick="setPeriod('dag')">Dag</button>
+          <button class="on" onclick="setPeriod('week')">Week</button>
+          <button class="off" onclick="setPeriod('maand')">Maand</button>
+        </div>
+      </div>
+      <div class="fb-group">
+        <span class="fb-label">KPI 1:</span>
+        <select id="selKpi1" onchange="updateChart()">
+          <option value="omzet">Omzet (€)</option><option value="bestellingen">Sales totaal</option>
+          <option value="bezoeken">Bezoekers</option><option value="convListing">Conv. % listing</option>
+          <option value="cost">Kosten SP (€)</option><option value="acos">ACOS (%)</option>
+          <option value="tacos">TACOS (%)</option><option value="winst">Winst (€)</option>
+          <option value="winstNaSp">Winst na SP (€)</option>
+        </select>
+      </div>
+      <div class="fb-group">
+        <span class="fb-label">KPI 2:</span>
+        <select id="selKpi2" onchange="updateChart()">
+          <option value="none">Geen</option><option value="acos" selected>ACOS (%)</option>
+          <option value="tacos">TACOS (%)</option><option value="convListing">Conv. %</option>
+          <option value="cost">Kosten SP (€)</option><option value="winst">Winst (€)</option>
+          <option value="winstNaSp">Winst na SP (€)</option>
+        </select>
+      </div>
+    </div>
+    <div class="kpi-row" id="genKpiRow"></div>
+    <div class="chart-row">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span class="card-title" id="chartLabel">—</span>
+          <div class="chart-leg" id="chartLeg"></div>
+        </div>
+        <div class="chart-area"><canvas id="genChart" role="img" aria-label="Resultaten per week">Wekelijkse resultaten grafiek.</canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Omzetverdeling merken</div>
+        <div class="donut-wrap"><canvas id="donutChart" width="120" height="120" role="img" aria-label="Omzetverdeling per merk">Omzetverdeling per merk.</canvas></div>
+        <div class="brand-list" id="brandList"></div>
+      </div>
+    </div>
+    <div class="card" id="prodBars" style="margin-bottom:16px;display:none;">
+      <div class="card-title" id="prodBarsTitle">Omzet per product</div>
+      <div class="bar-group" id="prodBarsContent"></div>
+    </div>
+    <div class="tbl-card">
+      <div class="tbl-top">
+        <span class="tbl-top-title" id="genTblTitle">—</span>
+        <span class="tbl-top-sub" id="genTblSub"></span>
+      </div>
+      <div class="tbl-scroll"><table id="genTable"><thead id="genTHead"></thead><tbody id="genTBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PRODUCT PAGE -->
+  <div class="page" id="page-product">
+    <div class="prod-header" id="prodHeader"></div>
+    <div class="stat-strip" id="prodStats"></div>
+    <div class="tbl-card">
+      <div class="tbl-top">
+        <span class="tbl-top-title">Resultaten per week — klik op rij voor notitie</span>
+        <div class="col-tog">
+          <button class="ctog on" onclick="toggleCols('basis')">Basis</button>
+          <button class="ctog on" onclick="toggleCols('sp')">Advertenties</button>
+          <button class="ctog on" onclick="toggleCols('org')">Organisch</button>
+        </div>
+      </div>
+      <div class="tbl-scroll"><table><thead><tr id="prodTHead"></tr></thead><tbody id="prodTBody"></tbody></table></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════
+//  GOOGLE SHEETS CONFIG
+// ═══════════════════════════════════════════════
+const SHEET_ID = '168RWMt5-7ZsSHxQtJoJtJrrP4xeaXsvu670QpdX1SY8';
+const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
+
+// We use the Anthropic API as a proxy to read/write Google Sheets
+// The webapp calls our Claude-powered backend which handles auth
+const API_URL = 'https://api.anthropic.com/v1/messages';
+
+// For Google Sheets public read access (no auth needed for public sheets)
+// Write access requires OAuth - we use a simple Apps Script web app as backend
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUB1wsdu_fu07vHC8f4IDlRCKKbRgvdV-xo8VF4Rp6CSvr5xMxHqnj0-svb0zMhuBG/exec'; // Set this after deploying Apps Script
+
+// ═══════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════
+const CONFIG = {
+  brands: { Sanova:['Douchewissers','Doucherek','Droogdoeken','Handdoekhaken'], Mancraft:['Neustrimmers','Scheerapparaten','Bodygroomers'] },
+  categories: {
+    Douchewissers:['SNV-006','SNV-005','SNV-002'], Doucherek:['SNV-007'], Droogdoeken:['SNV-008'],
+    Handdoekhaken:['Handdoekhaken'], Neustrimmers:['MC-2000A','MC-2000B'],
+    Scheerapparaten:['RSM-2888'], Bodygroomers:['MC-1000A','MC-1000B']
+  },
+  products: {
+    'SNV-006':{label:'SNV-006',brand:'Sanova',cat:'Douchewissers',eans:['8720299772571','8721008399058'],color:'#3b82f6'},
+    'SNV-007':{label:'SNV-007',brand:'Sanova',cat:'Doucherek',eans:['8721008399393','8721008399478'],color:'#60a5fa'},
+    'SNV-005':{label:'SNV-005',brand:'Sanova',cat:'Douchewissers',eans:['8721008399232'],color:'#93c5fd'},
+    'SNV-002':{label:'SNV-002',brand:'Sanova',cat:'Douchewissers',eans:['8719327743157','8721008399249'],color:'#bfdbfe'},
+    'SNV-008':{label:'SNV-008',brand:'Sanova',cat:'Droogdoeken',eans:['8721008399416','8721008399423','8721008399430'],color:'#7dd3fc'},
+    'Handdoekhaken':{label:'Handdoekhaken',brand:'Sanova',cat:'Handdoekhaken',eans:['8721008399546','8721008399492','8721008399522','8721008399508','8721008399515','8721008399539'],color:'#38bdf8'},
+    'MC-2000A':{label:'MC-2000A',brand:'Mancraft',cat:'Neustrimmers',eans:['8721008399195','8721008399188','8721008399171'],color:'#a855f7'},
+    'MC-2000B':{label:'MC-2000B',brand:'Mancraft',cat:'Neustrimmers',eans:['8721008399355','8721008399348'],color:'#c084fc'},
+    'MC-1000A':{label:'MC-1000A',brand:'Mancraft',cat:'Bodygroomers',eans:['8719327743164','8721008399225'],color:'#d8b4fe'},
+    'MC-1000B':{label:'MC-1000B',brand:'Mancraft',cat:'Bodygroomers',eans:['8721008399485','8721008399409'],color:'#e879f9'},
+    'RSM-2888':{label:'RSM-2888',brand:'Mancraft',cat:'Scheerapparaten',eans:['8719327743119'],color:'#818cf8'}
+  }
+};
+
+// ═══════════════════════════════════════════════
+//  STATE — processed data lives here
+// ═══════════════════════════════════════════════
+let STATE = {
+  view:'product', period:'week', currentProduct:'SNV-006',
+  artRaw:[], spRaw:[], winst:{}, notes:{}, processed:{}
+};
+
+// ═══════════════════════════════════════════════
+//  GOOGLE SHEETS — Read/Write via public CSV export
+//  + Apps Script for writes
+// ═══════════════════════════════════════════════
+async function testSheetConnection() {
+  const badge = document.getElementById('sheetBadge');
+  const log = document.getElementById('sheetLog');
+  badge.className = 'sync-badge syncing'; badge.textContent = 'Verbinden...';
+  log.textContent = '';
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=_meta`;
+    const res = await fetch(url);
+    if (res.ok) {
+      badge.className = 'sync-badge'; badge.textContent = 'Verbonden';
+      log.className = 'upload-log ok';
+      log.textContent = '✓ Google Sheet bereikbaar. Je kunt data uploaden.';
+    } else {
+      throw new Error('Sheet niet bereikbaar (status ' + res.status + ')');
+    }
+  } catch(e) {
+    badge.className = 'sync-badge err'; badge.textContent = 'Fout';
+    log.className = 'upload-log err';
+    log.textContent = '⚠ ' + e.message + '\n\nZorg dat de Sheet gedeeld is: Delen → "Iedereen met de link" → Bewerker.';
+  }
+}
+
+// Read a sheet tab as CSV rows
+async function readSheetTab(tabName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const text = await res.text();
+  return parseCsvText(text);
+}
+
+// Write to sheet via Apps Script (deployed as web app)
+async function writeToSheet(tabName, rows) {
+  if (!APPS_SCRIPT_URL) {
+    // Fallback: store in localStorage as backup
+    localStorage.setItem('bol_' + tabName, JSON.stringify(rows));
+    return true;
+  }
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'write', sheet:tabName, rows })
+  });
+  return res.ok;
+}
+
+// ═══════════════════════════════════════════════
+//  LOAD DATA FROM SHEET ON STARTUP
+// ═══════════════════════════════════════════════
+async function loadFromSheet() {
+  try {
+    // Load winst
+    const winstRows = await readSheetTab('_winst');
+    STATE.winst = {};
+    winstRows.slice(1).forEach(r => {
+      if (r[0] && r[1] && r[2]) {
+        if (!STATE.winst[r[0]]) STATE.winst[r[0]] = {};
+        STATE.winst[r[0]][r[1]] = parseFloat(r[2]) || 0;
+      }
+    });
+
+    // Load notes
+    const noteRows = await readSheetTab('_notities');
+    STATE.notes = {};
+    noteRows.slice(1).forEach(r => {
+      if (r[0] && r[1]) {
+        if (!STATE.notes[r[0]]) STATE.notes[r[0]] = {};
+        STATE.notes[r[0]][r[1]] = r[2] || '';
+      }
+    });
+
+    // Load art raw
+    const artRows = await readSheetTab('_Artikelen_Raw');
+    STATE.artRaw = artRows.slice(1).map(r => ({
+      ean:r[0], date:r[1], omzet:pf(r[2]), bezoeken:pf(r[3]), bestellingen:pf(r[4]), verkopen:pf(r[5])
+    })).filter(r => r.ean && r.date);
+
+    // Load sp raw
+    const spRows = await readSheetTab('_SP_Raw');
+    STATE.spRaw = spRows.slice(1).map(r => ({
+      ean:r[0], date:r[1], campaignId:r[2]||'', impressions:pf(r[3]), clicks:pf(r[4]), cost:pf(r[5]), sales14d:pf(r[6]), conversions14d:pf(r[7])
+    })).filter(r => r.ean && r.date);
+
+    if (STATE.artRaw.length > 0 || STATE.spRaw.length > 0) {
+      processAllData();
+    }
+  } catch(e) {
+    console.warn('Could not load from sheet:', e);
+    // Fall back to localStorage
+    loadFromLocalStorage();
+  }
+}
+
+function loadFromLocalStorage() {
+  try {
+    const s = localStorage.getItem('bolState');
+    if (!s) return;
+    const p = JSON.parse(s);
+    STATE.winst = p.winst || {};
+    STATE.notes = p.notes || {};
+    STATE.artRaw = p.artRaw || [];
+    STATE.spRaw = p.spRaw || [];
+    if (STATE.artRaw.length > 0) processAllData();
+  } catch(e) {}
+}
+
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem('bolState', JSON.stringify({
+      winst:STATE.winst, notes:STATE.notes, artRaw:STATE.artRaw, spRaw:STATE.spRaw
+    }));
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════
+//  WRITE WINST/NOTES BACK TO SHEET
+// ═══════════════════════════════════════════════
+async function syncWinstToSheet() {
+  const rows = [['product','periode','winst']];
+  Object.keys(STATE.winst).forEach(pk => {
+    Object.keys(STATE.winst[pk]).forEach(p => {
+      rows.push([pk, p, STATE.winst[pk][p]]);
+    });
+  });
+  await writeToSheet('_winst', rows);
+  saveToLocalStorage();
+}
+
+async function syncNotesToSheet() {
+  const rows = [['product','periode','notitie']];
+  Object.keys(STATE.notes).forEach(pk => {
+    Object.keys(STATE.notes[pk]).forEach(p => {
+      if (STATE.notes[pk][p]) rows.push([pk, p, STATE.notes[pk][p]]);
+    });
+  });
+  await writeToSheet('_notities', rows);
+  saveToLocalStorage();
+}
+
+// ═══════════════════════════════════════════════
+//  UPLOAD TO SHEET
+// ═══════════════════════════════════════════════
+function onFilesSelected(type) {
+  const files = document.getElementById(type+'Files').files;
+  document.getElementById(type+'ZoneLabel').innerHTML = Array.from(files).map(f=>`• ${f.name}`).join('<br>') || 'Klik om bestanden te kiezen';
+  document.getElementById(type+'UploadBtn').disabled = files.length === 0;
+}
+
+async function uploadFiles(type) {
+  const files = Array.from(document.getElementById(type+'Files').files);
+  const log = document.getElementById(type+'Log');
+  const prog = document.getElementById(type+'Progress');
+  log.className = 'upload-log'; log.textContent = '';
+  let allRows = [];
+  let total = 0;
+
+  for (let i = 0; i < files.length; i++) {
+    log.textContent = `Lezen: ${files[i].name}...`;
+    prog.style.width = Math.round((i/files.length)*70)+'%';
+    const text = await readFile(files[i]);
+    const rows = parseCsvText(text);
+    if (rows.length < 2) continue;
+    const headers = rows[0].map(h => h.trim().toLowerCase());
+
+    if (type === 'art') {
+      rows.slice(1).forEach(r => {
+        const ean = r[headers.indexOf('ean')] || '';
+        const date = r[headers.indexOf('datum')] || r[headers.indexOf('date')] || '';
+        if (!ean || !date) return;
+        allRows.push({ean:ean.trim(), date, omzet:pf(r[headers.indexOf('omzet')]||0), bezoeken:pf(r[headers.indexOf('bezoeken')]||0), bestellingen:pf(r[headers.indexOf('bestellingen')]||0), verkopen:pf(r[headers.indexOf('verkopen')]||0)});
+      });
+    } else {
+      rows.slice(1).forEach(r => {
+        const ean = r[headers.indexOf('ean')] || '';
+        const date = r[headers.indexOf('date')] || '';
+        if (!ean || !date) return;
+        allRows.push({ean:ean.trim(), date, campaignId:r[headers.indexOf('campaignid')]||'', impressions:pf(r[headers.indexOf('impressions')]||0), clicks:pf(r[headers.indexOf('clicks')]||0), cost:pf(r[headers.indexOf('cost')]||0), sales14d:pf(r[headers.indexOf('sales14d')]||0), conversions14d:pf(r[headers.indexOf('conversions14d')]||0)});
+      });
+    }
+    total += rows.length - 1;
+  }
+
+  log.textContent = `Verwerkt, uploaden naar Google Sheets...`;
+  prog.style.width = '80%';
+
+  // Merge with existing
+  if (type === 'art') {
+    const existing = STATE.artRaw.filter(r => !allRows.some(n => n.ean===r.ean && String(n.date)===String(r.date)));
+    STATE.artRaw = [...existing, ...allRows];
+    const sheetRows = [['EAN','Datum','Omzet','Bezoeken','Bestellingen','Verkopen'],
+      ...STATE.artRaw.map(r => [r.ean,r.date,r.omzet,r.bezoeken,r.bestellingen,r.verkopen])];
+    await writeToSheet('_Artikelen_Raw', sheetRows);
+  } else {
+    const existing = STATE.spRaw.filter(r => !allRows.some(n => n.ean===r.ean && String(n.date)===String(r.date) && n.campaignId===r.campaignId));
+    STATE.spRaw = [...existing, ...allRows];
+    const sheetRows = [['EAN','Date','CampaignId','Impressions','Clicks','Cost','Sales14d','Conversions14d'],
+      ...STATE.spRaw.map(r => [r.ean,r.date,r.campaignId,r.impressions,r.clicks,r.cost,r.sales14d,r.conversions14d])];
+    await writeToSheet('_SP_Raw', sheetRows);
+  }
+
+  saveToLocalStorage();
+  prog.style.width = '100%';
+  log.className = 'upload-log ok';
+  log.textContent = `✓ ${total} rijen uit ${files.length} bestand(en) opgeslagen. Klik nu op "Verwerk data naar dashboard".`;
+}
+
+async function processAndSync() {
+  const btn = document.getElementById('processBtn');
+  const log = document.getElementById('processLog');
+  btn.disabled = true; btn.textContent = 'Verwerken...';
+  log.className = 'upload-log'; log.textContent = 'Bezig...';
+
+  await new Promise(r => setTimeout(r, 50));
+  processAllData();
+
+  log.className = 'upload-log ok';
+  log.textContent = `✓ Klaar! ${Object.keys(STATE.processed).length} producten bijgewerkt.`;
+  btn.disabled = false; btn.textContent = 'Verwerk data naar dashboard';
+  renderGeneral();
+}
+
+async function clearUploads() {
+  if (!confirm('Dit wist alle geüploade ruwe data. Notities en winst blijven bewaard. Doorgaan?')) return;
+  STATE.artRaw = []; STATE.spRaw = []; STATE.processed = {};
+  await writeToSheet('_Artikelen_Raw', [['EAN','Datum','Omzet','Bezoeken','Bestellingen','Verkopen']]);
+  await writeToSheet('_SP_Raw', [['EAN','Date','CampaignId','Impressions','Clicks','Cost','Sales14d','Conversions14d']]);
+  saveToLocalStorage();
+  alert('Uploads gewist.');
+}
+
+// ═══════════════════════════════════════════════
+//  DATA PROCESSING
+// ═══════════════════════════════════════════════
+const MONTHS = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+function fmt(d){return d.getDate()+' '+MONTHS[d.getMonth()];}
+function getWeekLabel(v){
+  let d=v instanceof Date?new Date(v):new Date(String(v).replace(/-/g,'/'));
+  if(isNaN(d))return null;
+  const day=d.getDay(),diff=day===0?-6:1-day;
+  const mon=new Date(d);mon.setDate(d.getDate()+diff);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  return fmt(mon)+' – '+fmt(sun);
+}
+function getMonthLabel(v){
+  let d=v instanceof Date?new Date(v):new Date(String(v).replace(/-/g,'/'));
+  if(isNaN(d))return null;
+  return MONTHS[d.getMonth()]+' '+d.getFullYear();
+}
+function getPeriodLabel(v){return STATE.period==='maand'?getMonthLabel(v):STATE.period==='dag'?String(v).substring(0,10):getWeekLabel(v);}
+function weekHasStarted(label){
+  if(STATE.period==='dag')return new Date(label.replace(/-/g,'/'))<new Date();
+  if(STATE.period==='maand')return true;
+  const today=new Date();today.setHours(0,0,0,0);
+  const parts=label.split('–')[0].trim().split(' ');
+  const m=MONTHS.indexOf(parts[1]);if(m<0)return false;
+  return new Date(today.getFullYear(),m,parseInt(parts[0]))<=today;
+}
+function periodToDate(label){
+  try{
+    if(STATE.period==='dag')return new Date(label.replace(/-/g,'/'));
+    if(STATE.period==='maand'){const p=label.split(' ');const m=MONTHS.indexOf(p[0]);return new Date(parseInt(p[1]),m<0?0:m,1);}
+    const part=label.split('–')[0].trim().split(' ');const m=MONTHS.indexOf(part[1]);
+    return new Date(2026,m<0?0:m,parseInt(part[0])||1);
+  }catch(e){return new Date(0);}
+}
+
+function processAllData(){
+  const artByEanPeriod={};
+  STATE.artRaw.forEach(r=>{
+    const ean=String(r.ean||'').trim(),label=getPeriodLabel(r.date);
+    if(!ean||!label)return;
+    if(!artByEanPeriod[ean])artByEanPeriod[ean]={};
+    if(!artByEanPeriod[ean][label])artByEanPeriod[ean][label]={omzet:0,bezoeken:0,bestellingen:0,verkopen:0};
+    artByEanPeriod[ean][label].omzet+=pf(r.omzet);
+    artByEanPeriod[ean][label].bezoeken+=pf(r.bezoeken);
+    artByEanPeriod[ean][label].bestellingen+=pf(r.bestellingen);
+    artByEanPeriod[ean][label].verkopen+=pf(r.verkopen);
+  });
+  const spByEanPeriod={};
+  STATE.spRaw.forEach(r=>{
+    const ean=String(r.ean||'').trim(),label=getPeriodLabel(r.date);
+    if(!ean||!label)return;
+    if(!spByEanPeriod[ean])spByEanPeriod[ean]={};
+    if(!spByEanPeriod[ean][label])spByEanPeriod[ean][label]={impressions:0,clicks:0,cost:0,sales14d:0,conversions14d:0};
+    spByEanPeriod[ean][label].impressions+=pf(r.impressions);
+    spByEanPeriod[ean][label].clicks+=pf(r.clicks);
+    spByEanPeriod[ean][label].cost+=pf(r.cost);
+    spByEanPeriod[ean][label].sales14d+=pf(r.sales14d);
+    spByEanPeriod[ean][label].conversions14d+=pf(r.conversions14d);
+  });
+  STATE.processed={};
+  Object.keys(CONFIG.products).forEach(pk=>{
+    const prod=CONFIG.products[pk];
+    const periods={};
+    prod.eans.forEach(ean=>{
+      Object.keys(artByEanPeriod[ean]||{}).forEach(p=>{periods[p]=true;});
+      Object.keys(spByEanPeriod[ean]||{}).forEach(p=>{periods[p]=true;});
+    });
+    STATE.processed[pk]={};
+    Object.keys(periods).forEach(label=>{
+      if(STATE.period==='week'&&!weekHasStarted(label))return;
+      let omzet=0,bezoeken=0,bestellingen=0,verkopen=0,impressions=0,clicks=0,cost=0,spSales=0,spConv=0;
+      prod.eans.forEach(ean=>{
+        const a=(artByEanPeriod[ean]||{})[label]||{};
+        omzet+=a.omzet||0;bezoeken+=a.bezoeken||0;bestellingen+=a.bestellingen||0;verkopen+=a.verkopen||0;
+        const s=(spByEanPeriod[ean]||{})[label]||{};
+        impressions+=s.impressions||0;clicks+=s.clicks||0;cost+=s.cost||0;spSales+=s.sales14d||0;spConv+=s.conversions14d||0;
+      });
+      const winst=((STATE.winst[pk]||{})[label])||0;
+      STATE.processed[pk][label]=calcKpis(omzet,bezoeken,bestellingen,verkopen,impressions,clicks,cost,spSales,spConv,winst);
+    });
+  });
+}
+
+function calcKpis(omzet,bezoeken,bestellingen,verkopen,impressions,clicks,cost,spSales,spConv,winst){
+  return{
+    omzet,bezoeken,bestellingen,verkopen,
+    gemPrijs:verkopen>0?(omzet/verkopen)*1.21:0,
+    orgBez:Math.max(bezoeken-clicks,0),
+    orgBezPct:bezoeken>0?Math.max(bezoeken-clicks,0)/bezoeken:0,
+    orgSalesPct:bestellingen>0?Math.max(bestellingen-spConv,0)/bestellingen:0,
+    impressions,clicks,cost,spSales,spConv,
+    ctr:impressions>0?clicks/impressions:0,
+    convListing:bezoeken>0?bestellingen/bezoeken:0,
+    convSp:clicks>0?spConv/clicks:0,
+    acos:spSales>0?cost/spSales:0,
+    tacos:omzet>0?cost/omzet:0,
+    winst,winstNaSp:winst-cost
+  };
+}
+
+function aggregateKpis(entries){
+  let omzet=0,bezoeken=0,bestellingen=0,verkopen=0,impressions=0,clicks=0,cost=0,spSales=0,spConv=0,winst=0;
+  entries.forEach(e=>{omzet+=e.omzet||0;bezoeken+=e.bezoeken||0;bestellingen+=e.bestellingen||0;verkopen+=e.verkopen||0;impressions+=e.impressions||0;clicks+=e.clicks||0;cost+=e.cost||0;spSales+=e.spSales||0;spConv+=e.spConv||0;winst+=e.winst||0;});
+  return calcKpis(omzet,bezoeken,bestellingen,verkopen,impressions,clicks,cost,spSales,spConv,winst);
+}
+
+function getPeriodsForProduct(pk){return Object.keys(STATE.processed[pk]||{}).sort((a,b)=>periodToDate(a)-periodToDate(b));}
+function getPeriodsForProducts(pks){const all=new Set();pks.forEach(pk=>Object.keys(STATE.processed[pk]||{}).forEach(p=>all.add(p)));return[...all].sort((a,b)=>periodToDate(a)-periodToDate(b));}
+function getKpi(pk,p){return(STATE.processed[pk]||{})[p]||null;}
+function getSum(pks,p){const e=pks.map(pk=>getKpi(pk,p)).filter(Boolean);return e.length?aggregateKpis(e):null;}
+
+// ═══════════════════════════════════════════════
+//  FORMATTING
+// ═══════════════════════════════════════════════
+function eur(v){return'€'+(v||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function pct(v){return((v||0)*100).toFixed(1)+'%';}
+function pf(v){const n=parseFloat(String(v||'').replace(',','.'));return isNaN(n)?0:n;}
+function int(v){return Math.round(v||0).toLocaleString('nl-NL');}
+function acosColor(v){if(!v)return'n';const p=v*100;if(p<10)return'g';if(p<15)return'a';return'r';}
+const PCT_KEYS=['orgBezPct','orgSalesPct','ctr','convListing','convSp','acos','tacos'];
+const EUR_KEYS=['omzet','gemPrijs','spSales','cost','winst','winstNaSp'];
+function kpiVal(key,k){
+  if(!k)return'—';const v=k[key];if(v===undefined||v===null)return'—';
+  if(PCT_KEYS.includes(key))return pct(v);if(EUR_KEYS.includes(key))return eur(v);return int(v);
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+function showPage(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  const n=document.getElementById('nav-'+p);if(n)n.classList.add('active');
+  if(p==='general')renderGeneral();
+}
+function showProduct(key){
+  STATE.currentProduct=key;
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-product').classList.add('active');
+  const n=document.getElementById('nav-'+key);if(n)n.classList.add('active');
+  renderProductPage(key);
+}
+
+// ═══════════════════════════════════════════════
+//  GENERAL PAGE
+// ═══════════════════════════════════════════════
+let genChartInst=null,donutChartInst=null;
+
+function setView(v){
+  STATE.view=v;
+  const btns=document.querySelectorAll('#viewSeg button');
+  ['merk','vergelijk','cat','product'].forEach((vv,i)=>btns[i].className=vv===v?'on':'off');
+  document.getElementById('fb-merk').style.display=['merk','vergelijk'].includes(v)?'flex':'none';
+  document.getElementById('fb-cat').style.display=v==='cat'?'flex':'none';
+  document.getElementById('fb-prod').style.display=v==='product'?'flex':'none';
+  renderGeneral();
+}
+function setPeriod(p){
+  STATE.period=p;
+  document.querySelectorAll('#periodSeg button').forEach((b,i)=>b.className=['dag','week','maand'][i]===p?'on':'off');
+  if(STATE.artRaw.length>0||STATE.spRaw.length>0)processAllData();
+  renderGeneral();
+}
+function getSelectedPks(){
+  const v=STATE.view;
+  if(v==='product')return[document.getElementById('selProd').value];
+  if(v==='merk'){const m=document.getElementById('selMerk').value;return(CONFIG.brands[m]||[]).flatMap(c=>CONFIG.categories[c]||[]);}
+  if(v==='vergelijk')return Object.keys(CONFIG.products);
+  if(v==='cat')return CONFIG.categories[document.getElementById('selCat').value]||[];
+  return[];
+}
+
+function renderGeneral(){
+  const pks=getSelectedPks();
+  const periods=getPeriodsForProducts(pks);
+  const allKpis=periods.map(p=>getSum(pks,p)).filter(Boolean);
+  const total=allKpis.length?aggregateKpis(allKpis):null;
+
+  document.getElementById('genKpiRow').innerHTML=['Totale omzet','Gem. ACOS','Gem. conv. %','Totaal kosten SP','Totale winst na SP']
+    .map((l,i)=>{
+      const vals=[total?eur(total.omzet):'—',total?pct(total.acos):'—',total?pct(total.convListing):'—',total?eur(total.cost):'—',total?eur(total.winstNaSp):'—'];
+      const cls=i===4&&total?total.winstNaSp>0?'g':'r':i===1&&total?acosColor(total.acos):'n';
+      return`<div class="kc"><div class="kc-l">${l}</div><div class="kc-v ${cls}">${vals[i]}</div></div>`;
+    }).join('');
+
+  const showBars=['merk','cat','vergelijk'].includes(STATE.view);
+  document.getElementById('prodBars').style.display=showBars?'block':'none';
+  if(showBars)renderProductBars(pks);
+
+  renderGenTable(pks,periods);
+  updateChart();
+  renderDonut();
+}
+
+function renderProductBars(pks){
+  const totals=pks.map(pk=>{
+    const ps=getPeriodsForProduct(pk);
+    const all=ps.map(p=>getKpi(pk,p)).filter(Boolean);
+    const t=all.length?aggregateKpis(all):{omzet:0,acos:0};
+    return{pk,...t};
+  }).sort((a,b)=>b.omzet-a.omzet);
+  const max=totals[0]?.omzet||1;
+  document.getElementById('prodBarsContent').innerHTML=totals.map(t=>{
+    const w=Math.round(t.omzet/max*100);
+    return`<div class="bar-row"><span class="bar-label" onclick="showProduct('${t.pk}')">${t.pk}</span><div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${CONFIG.products[t.pk].color}"></div></div><div class="bar-vals"><span class="bar-v">${eur(t.omzet)}</span><span class="bar-acos">${t.acos>0?pct(t.acos):'—'}</span></div></div>`;
+  }).join('');
+}
+
+function renderGenTable(pks,periods){
+  const v=STATE.view;
+  const thead=document.getElementById('genTHead');
+  const tbody=document.getElementById('genTBody');
+  const kpiKeys=['omzet','bestellingen','bezoeken','convListing','cost','acos','tacos','winst','winstNaSp'];
+  const kpiLabels={'omzet':'Omzet','bestellingen':'Sales','bezoeken':'Bezoekers','convListing':'Conv.%','cost':'Kosten SP','acos':'ACOS','tacos':'TACOS','winst':'Winst','winstNaSp':'Winst na SP'};
+
+  if(v==='vergelijk'){
+    const sp=CONFIG.brands.Sanova.flatMap(c=>CONFIG.categories[c]||[]);
+    const mp=CONFIG.brands.Mancraft.flatMap(c=>CONFIG.categories[c]||[]);
+    thead.innerHTML=`<tr><th>Periode</th><th style="color:#93c5fd">Sanova omzet</th><th style="color:#93c5fd">ACOS</th><th style="color:#d8b4fe">Mancraft omzet</th><th style="color:#d8b4fe">ACOS</th></tr>`;
+    tbody.innerHTML=periods.slice().reverse().map(p=>{
+      const s=getSum(sp,p),m=getSum(mp,p);
+      return`<tr><td>${p}</td><td>${s?eur(s.omzet):'—'}</td><td class="${s?acosColor(s.acos):'n'}">${s?pct(s.acos):'—'}</td><td>${m?eur(m.omzet):'—'}</td><td class="${m?acosColor(m.acos):'n'}">${m?pct(m.acos):'—'}</td></tr>`;
+    }).join('');
+    document.getElementById('genTblTitle').textContent='Sanova vs Mancraft per periode';
+    document.getElementById('genTblSub').textContent=periods.length+' periodes';
+    return;
+  }
+
+  thead.innerHTML=`<tr><th>Periode</th>${kpiKeys.map(k=>`<th>${kpiLabels[k]}</th>`).join('')}</tr>`;
+  const singlePk=pks.length===1?pks[0]:null;
+  tbody.innerHTML=periods.slice().reverse().map(p=>{
+    const k=getSum(pks,p);if(!k)return'';
+    return`<tr>${['', ...kpiKeys].map((key,i)=>{
+      if(i===0)return`<td>${p}</td>`;
+      if(key==='acos'||key==='tacos')return`<td class="${acosColor(k[key])}">${kpiVal(key,k)}</td>`;
+      if(key==='winst'&&singlePk)return`<td><input class="winst-inp${k.winst>0?' has-value':''}" value="${k.winst>0?Math.round(k.winst):''}" placeholder="invoer" onclick="event.stopPropagation()" onblur="saveWinst('${singlePk}','${p}',this.value)" onkeydown="if(event.key==='Enter')this.blur()"></td>`;
+      return`<td>${kpiVal(key,k)}</td>`;
+    }).join('')}</tr>`;
+  }).join('');
+  const name=pks.length===1?pks[0]:(v==='cat'?document.getElementById('selCat').value:document.getElementById('selMerk').value);
+  document.getElementById('genTblTitle').textContent=name+' — resultaten per periode';
+  document.getElementById('genTblSub').textContent=periods.length+' periodes met data';
+}
+
+function updateChart(){
+  const pks=getSelectedPks();
+  const periods=getPeriodsForProducts(pks);
+  const k1=document.getElementById('selKpi1').value;
+  const k2=document.getElementById('selKpi2').value;
+  const isPct1=PCT_KEYS.includes(k1);
+  const isPct2=PCT_KEYS.includes(k2);
+
+  const d1=periods.map(p=>{const k=getSum(pks,p);return k?(k[k1]||0)*(isPct1?100:1):0;});
+  const d2=k2!=='none'?periods.map(p=>{const k=getSum(pks,p);return k?(k[k2]||0)*(isPct2?100:1):0;}):[];
+
+  const kLabels={'omzet':'Omzet','bestellingen':'Sales','bezoeken':'Bezoekers','convListing':'Conv.%','cost':'Kosten SP','acos':'ACOS %','tacos':'TACOS %','winst':'Winst','winstNaSp':'Winst na SP','orgBezPct':'% Org. bezoekers','orgSalesPct':'% Org. sales'};
+  document.getElementById('chartLabel').textContent=(kLabels[k1]||k1)+(k2!=='none'?' + '+(kLabels[k2]||k2):'');
+  document.getElementById('chartLeg').innerHTML=`<div class="leg"><div class="leg-line" style="background:#3b82f6"></div>${kLabels[k1]||k1}</div>`+(k2!=='none'?`<div class="leg"><div class="leg-bar" style="background:rgba(16,185,129,.6)"></div>${kLabels[k2]||k2}</div>`:'');
+
+  if(genChartInst)genChartInst.destroy();
+  const datasets=[{type:'line',label:kLabels[k1]||k1,data:d1,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.07)',borderWidth:2,pointBackgroundColor:'#3b82f6',pointRadius:3,tension:.35,fill:true,yAxisID:'y'}];
+  if(k2!=='none')datasets.push({type:'bar',label:kLabels[k2]||k2,data:d2,backgroundColor:'rgba(16,185,129,.45)',borderColor:'#10b981',borderWidth:1,borderRadius:3,yAxisID:'y2'});
+
+  genChartInst=new Chart(document.getElementById('genChart'),{
+    type:'bar',data:{labels:periods,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#141b28',borderColor:'#1e2a3d',borderWidth:1,titleColor:'#8494a8',bodyColor:'#e8edf5'}},
+      scales:{
+        x:{grid:{color:'rgba(30,42,61,.8)'},ticks:{color:'#4a5568',font:{size:9},maxRotation:45,autoSkip:true,maxTicksLimit:16}},
+        y:{grid:{color:'rgba(30,42,61,.8)'},ticks:{color:'#4a5568',font:{size:9},callback:v=>isPct1?v.toFixed(1)+'%':'€'+Math.round(v).toLocaleString('nl-NL')},position:'left'},
+        ...(datasets.length>1?{y2:{grid:{display:false},ticks:{color:'#10b981',font:{size:9},callback:v=>v.toFixed(1)+(isPct2?'%':'')},position:'right'}}:{})
+      }
+    }
+  });
+}
+
+function renderDonut(){
+  const sp=CONFIG.brands.Sanova.flatMap(c=>CONFIG.categories[c]||[]);
+  const mp=CONFIG.brands.Mancraft.flatMap(c=>CONFIG.categories[c]||[]);
+  const sO=sp.flatMap(pk=>getPeriodsForProduct(pk).map(p=>getKpi(pk,p))).filter(Boolean).reduce((a,b)=>a+(b.omzet||0),0);
+  const mO=mp.flatMap(pk=>getPeriodsForProduct(pk).map(p=>getKpi(pk,p))).filter(Boolean).reduce((a,b)=>a+(b.omzet||0),0);
+  const tot=sO+mO||1;
+  const sp2=Math.round(sO/tot*100),mp2=100-sp2;
+  if(donutChartInst)donutChartInst.destroy();
+  donutChartInst=new Chart(document.getElementById('donutChart'),{type:'doughnut',data:{labels:['Sanova','Mancraft'],datasets:[{data:[sp2,mp2],backgroundColor:['#3b82f6','#a855f7'],borderWidth:0}]},options:{responsive:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{backgroundColor:'#141b28',titleColor:'#8494a8',bodyColor:'#e8edf5'}}}});
+  document.getElementById('brandList').innerHTML=`<div class="brand-row"><div class="brand-name"><span class="brand-dot" style="background:#3b82f6"></span>Sanova</div><div><span class="brand-val">${eur(sO)}</span> <span class="brand-pct">${sp2}%</span></div></div><div class="brand-row" style="margin-top:6px"><div class="brand-name"><span class="brand-dot" style="background:#a855f7"></span>Mancraft</div><div><span class="brand-val">${eur(mO)}</span> <span class="brand-pct">${mp2}%</span></div></div>`;
+}
+
+// ═══════════════════════════════════════════════
+//  PRODUCT PAGE
+// ═══════════════════════════════════════════════
+const PROD_COLS=[
+  {key:'omzet',label:'Omzet',group:'basis'},{key:'gemPrijs',label:'Gem. prijs',group:'basis'},
+  {key:'bestellingen',label:'Sales',group:'basis'},{key:'bezoeken',label:'Bezoekers',group:'basis'},
+  {key:'convListing',label:'Conv.% listing',group:'basis'},
+  {key:'orgBez',label:'Org. bez.',group:'org'},{key:'orgBezPct',label:'% Org. bez.',group:'org'},
+  {key:'orgSalesPct',label:'% Org. sales',group:'org'},
+  {key:'impressions',label:'Vert. SP',group:'sp'},{key:'clicks',label:'Clicks SP',group:'sp'},
+  {key:'ctr',label:'CTR SP',group:'sp'},{key:'spConv',label:'SP stuks',group:'sp'},
+  {key:'convSp',label:'Conv.% SP',group:'sp'},{key:'cost',label:'Kosten SP',group:'sp'},
+  {key:'acos',label:'ACOS',group:'sp'},{key:'tacos',label:'TACOS',group:'sp'},
+  {key:'winst',label:'Winst',group:'basis',editable:true},{key:'winstNaSp',label:'Winst na SP',group:'basis'}
+];
+let activeCols={basis:true,sp:true,org:true};
+
+function toggleCols(g){
+  activeCols[g]=!activeCols[g];
+  document.querySelectorAll('.ctog').forEach((b,i)=>{b.className='ctog'+(activeCols[['basis','sp','org'][i]]?' on':'');});
+  renderProductPage(STATE.currentProduct);
+}
+
+function renderProductPage(pk){
+  const prod=CONFIG.products[pk];if(!prod)return;
+  document.getElementById('prodHeader').innerHTML=`
+    <div class="prod-icon" style="background:${prod.color}22;color:${prod.color}">${pk.replace('-','<br>')}</div>
+    <div class="prod-info"><h3>${pk} — ${prod.cat}</h3><p>EAN: ${prod.eans.join(' + ')} · ${prod.brand}</p>
+    <div class="chips"><span class="chip">${prod.brand}</span><span class="chip">${prod.eans.length} EAN${prod.eans.length>1?'s':''}</span><span class="chip">${prod.cat}</span></div></div>
+    <button class="back-btn" onclick="showPage('general')">← Terug</button>`;
+
+  const periods=getPeriodsForProduct(pk);
+  const allK=periods.map(p=>getKpi(pk,p)).filter(Boolean);
+  const total=allK.length?aggregateKpis(allK):null;
+  document.getElementById('prodStats').innerHTML=[
+    ['YTD omzet',total?eur(total.omzet):'—',''],
+    ['Gem. prijs incl. BTW',total&&total.gemPrijs>0?eur(total.gemPrijs):'—',''],
+    ['Gem. ACOS',total?pct(total.acos):'—',total?acosColor(total.acos):'n'],
+    ['Gem. conv. %',total?pct(total.convListing):'—',''],
+    ['Org. bez. gem.',total?pct(total.orgBezPct):'—',''],
+    ['YTD winst na SP',total?eur(total.winstNaSp):'—',total&&total.winstNaSp>0?'g':'r']
+  ].map(([l,v,c])=>`<div class="stat"><div class="stat-l">${l}</div><div class="stat-v ${c}">${v}</div></div>`).join('');
+
+  const visCols=PROD_COLS.filter(c=>activeCols[c.group]);
+  document.getElementById('prodTHead').innerHTML='<th></th><th style="text-align:left">Periode</th>'+visCols.map(c=>`<th>${c.label}</th>`).join('');
+
+  const tbody=document.getElementById('prodTBody');
+  tbody.innerHTML='';
+  periods.slice().reverse().forEach(p=>{
+    const k=getKpi(pk,p);if(!k)return;
+    const note=(STATE.notes[pk]||{})[p]||'';
+    const dr=document.createElement('tr');dr.className='data-row';
+    dr.innerHTML=`<td><span class="expand-icon">▶</span></td><td style="text-align:left">${note?'<span class="note-dot"></span>':''}${p}</td>`+
+      visCols.map(c=>{
+        if(c.editable){const w=k.winst;return`<td><input class="winst-inp${w>0?' has-value':''}" value="${w>0?Math.round(w):''}" placeholder="invoer" onclick="event.stopPropagation()" onblur="saveWinst('${pk}','${p}',this.value);this.className='winst-inp'+(parseFloat(this.value)>0?' has-value':'')" onkeydown="if(event.key==='Enter')this.blur()"></td>`;}
+        const v=k[c.key];let cls='';
+        if(c.key==='acos'||c.key==='tacos')cls=` class="${acosColor(v)}"`;
+        return`<td${cls}>${kpiVal(c.key,k)}</td>`;
+      }).join('');
+    const nr=document.createElement('tr');nr.className='note-row';
+    nr.innerHTML=`<td colspan="${visCols.length+2}"><div class="note-inner"><div class="note-bubble${note?'':' empty'}"><p>${note||'Geen notitie voor deze week.'}</p></div><div class="note-actions"><textarea class="note-inp" placeholder="Notitie toevoegen...">${note}</textarea><button class="save-btn" onclick="saveNote('${pk}','${p}',this.previousElementSibling.value,this)">Opslaan</button></div></div></td>`;
+    dr.addEventListener('click',()=>{const o=dr.classList.contains('open');tbody.querySelectorAll('.data-row').forEach(x=>x.classList.remove('open'));tbody.querySelectorAll('.note-row').forEach(x=>x.classList.remove('open'));if(!o){dr.classList.add('open');nr.classList.add('open');}});
+    tbody.appendChild(dr);tbody.appendChild(nr);
+  });
+}
+
+async function saveWinst(pk,period,val){
+  const v=parseFloat(val);
+  if(!STATE.winst[pk])STATE.winst[pk]={};
+  STATE.winst[pk][period]=isNaN(v)?0:v;
+  if(STATE.processed[pk]&&STATE.processed[pk][period]){
+    STATE.processed[pk][period].winst=isNaN(v)?0:v;
+    STATE.processed[pk][period].winstNaSp=(isNaN(v)?0:v)-(STATE.processed[pk][period].cost||0);
+  }
+  await syncWinstToSheet();
+}
+
+async function saveNote(pk,period,text,btn){
+  if(!STATE.notes[pk])STATE.notes[pk]={};
+  STATE.notes[pk][period]=text;
+  btn.textContent='Opslaan...';btn.className='save-btn saving';
+  await syncNotesToSheet();
+  btn.textContent='Opgeslagen ✓';
+  setTimeout(()=>{btn.textContent='Opslaan';btn.className='save-btn';},2000);
+  const nb=btn.closest('.note-inner').querySelector('.note-bubble');
+  nb.className='note-bubble'+(text?'':' empty');nb.querySelector('p').textContent=text||'Geen notitie voor deze week.';
+}
+
+// ═══════════════════════════════════════════════
+//  CSV PARSER
+// ═══════════════════════════════════════════════
+function parseCsvText(text){
+  const first=text.split('\n')[0],sep=first.includes(';')?';':',';
+  const lines=text.split('\n').filter(l=>l.trim());
+  return lines.map(l=>splitLine(l,sep));
+}
+function splitLine(line,sep){
+  const res=[];let cur='',inQ=false;
+  for(const ch of line){if(ch==='"')inQ=!inQ;else if(ch===sep&&!inQ){res.push(cur.trim());cur='';}else cur+=ch;}
+  res.push(cur.trim());return res;
+}
+function readFile(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsText(file,'UTF-8');});}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',async()=>{
+  setView('product');
+  renderDonut();
+  await loadFromSheet();
+  renderGeneral();
+  if(STATE.currentProduct)renderProductPage(STATE.currentProduct);
+  testSheetConnection();
+});
+</script>
+</body>
+</html>
